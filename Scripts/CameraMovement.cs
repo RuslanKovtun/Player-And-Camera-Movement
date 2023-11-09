@@ -14,7 +14,7 @@ public class CameraMovement : MonoBehaviour
     [SerializeField] private float _mouseSensivity;
 
     [Header("Player")]
-    [SerializeField] private Transform _player;
+    [SerializeField] private Transform _character;
 
     private void Awake()
     {
@@ -37,7 +37,7 @@ public class CameraMovement : MonoBehaviour
             _xRotation = Mathf.Clamp(_xRotation, MIN_X, MAX_X);
 
             transform.localRotation = Quaternion.Euler(_xRotation, 0f, 0f);
-            _player.Rotate(Vector3.up * mouseX);
+            _character.Rotate(Vector3.up * mouseX);
         }
     }
 }

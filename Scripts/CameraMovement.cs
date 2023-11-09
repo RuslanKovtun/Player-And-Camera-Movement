@@ -24,11 +24,6 @@ public class CameraMovement : MonoBehaviour
     private void Update()
     {
         CameraMove();
-
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            Cursor.lockState = CursorLockMode.Confined;
-        }
     }
 
     private void CameraMove()

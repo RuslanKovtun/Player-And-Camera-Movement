@@ -3,8 +3,12 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody), typeof(AudioSource))]
 public class Movement : MonoBehaviour
 {
+    public static Transform singlton { get; private set; }
+
     private const string HORIZONTAL_AXIS = "Horizontal";
     private const string VERTICAL_AXIS = "Vertical";
+
+    private bool _onGround;
 
     private AudioSource _audioSource;
     private Rigidbody _rigidbody;
@@ -23,6 +27,8 @@ public class Movement : MonoBehaviour
     {
         _rigidbody = GetComponent<Rigidbody>();
         _audioSource = GetComponent<AudioSource>();
+
+        singlton = transform;
     }
 
     private void FixedUpdate()
@@ -32,12 +38,13 @@ public class Movement : MonoBehaviour
 
     private void Update()
     {
+        PlayerOnGround();
         JumpPlayer();
     }
 
     private void JumpPlayer()
     {
-        if (Physics.SphereCast(transform.position, 0.25f, -transform.up, out var hitInfo, 1f))
+        if (_onGround)
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
@@ -46,28 +53,40 @@ public class Movement : MonoBehaviour
         }
     }
 
+    private void PlayerOnGround()
+    {
+        if (Physics.SphereCast(transform.position, 0.25f, -transform.up, out var hitInfo, 1f, _collisionLayerMask))
+        {
+            _onGround = true;
+        }
+        else
+        {
+            _onGround = false;
+        }
+    }
+
     private void MoveMode()
     {
         if (Input.GetKey(KeyCode.LeftShift))
         {
-            MovePlayer(_runSpeed);
+            MoveTransform(_runSpeed);
         }
         else
         {
-            MovePlayer(_walkSpeed);
+            MoveTransform(_walkSpeed);
         }
     }
 
     private void TryJump()
     {
         var jumpVelocity = Vector3.up * _jumpForce;
-        _rigidbody.AddForce(jumpVelocity, ForceMode.VelocityChange);
+        _rigidbody.AddForce(jumpVelocity, ForceMode.Impulse);
     }
 
-    private void MovePlayer(float speed)
+    private void MoveTransform(float speed)
     {
-        float horizontal = Input.GetAxis(HORIZONTAL_AXIS) * speed * Time.fixedDeltaTime;
-        float vertical = Input.GetAxis(VERTICAL_AXIS) * speed * Time.fixedDeltaTime;
+        float horizontal = Input.GetAxis(HORIZONTAL_AXIS) * speed * Time.deltaTime;
+        float vertical = Input.GetAxis(VERTICAL_AXIS) * speed * Time.deltaTime;
 
         if (horizontal != 0 || vertical != 0)
         {
@@ -80,15 +99,15 @@ public class Movement : MonoBehaviour
 
     private void PlayWalkSound()
     {
-        if (Physics.SphereCast(transform.position, 0.25f, -transform.up, out var hitInfo, 1f))
+        if (_onGround)
         {
             if (_audioSource.isPlaying || _walkSounds.Length == 0)
             {
                 return;
             }
 
-            int index = Random.Range(0, _walkSounds.Length);
-            _audioSource?.PlayOneShot(_walkSounds[index]);
+            var sound = _walkSounds[Random.Range(0, _walkSounds.Length)];
+            _audioSource.PlayOneShot(sound);
         }
     }
 }
